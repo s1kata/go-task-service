@@ -1,0 +1,17 @@
+
+main/main
+main/main.exe
+*.exe
+.env
+.env.local
+.idea/
+.vscode/
+*.swp
+*.test
+*.out
+vendor/
+.DS_Store
+Thumbs.db
+*.log
+task.json
+*.tmp
