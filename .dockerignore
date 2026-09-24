@@ -1,0 +1,11 @@
+main/main
+main/main.exe
+*.exe
+.env
+docker-compose.yml
+Dockerfile
+.git
+*.md
+*.log
+.idea/
+.vscode/
