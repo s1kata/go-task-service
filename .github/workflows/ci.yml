@@ -1,0 +1,17 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+    lin-test:
+      runs-on: ubuntu-latest
+      steps:
+      - name: CheckOut
+        uses: actions/checkout@v4
+      - name: SetUp Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build
+        run: go build ./...
+    
