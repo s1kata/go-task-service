@@ -24,7 +24,7 @@ func WriteError(w http.ResponseWriter, err error){
 		ResponseWithErrorJSON(w,http.StatusNotFound,"task not found")
 	default:
 		log.Println("internal error",err)
-		ResponseWithErrorJSON(w, http.StatusInternalServerError, "intnernail server error")
+		ResponseWithErrorJSON(w, http.StatusInternalServerError, "intnernal server error")
 	}
 	
 }

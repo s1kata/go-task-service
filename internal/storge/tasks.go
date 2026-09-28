@@ -4,14 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"http-practive/internal/models"
+	"strings"
 )
 	type TaskStore interface{
 		Create(ctx context.Context, input models.CreateTaskInput)(*models.Task, error)
 		List(ctx context.Context,completed *bool)([]models.Task, error)
 		GetByID(ctx context.Context, id int)(*models.Task, error)
 		Update(ctx context.Context, id int, input models.UpdateTaskInput)(*models.Task,error)
-		//Delete(ctx context.Context, id int)error
+		Delete(ctx context.Context, id int)error
+		SetCompleted(ctx context.Context, id int, completed bool)(*models.Task, error)
 	}
 	type PostgresTaskStore struct{
 		db *sql.DB
@@ -32,8 +35,19 @@ func (s *PostgresTaskStore) Create(ctx context.Context, input models.CreateTaskI
 	return &task, nil
 }
 func (s *PostgresTaskStore)List(ctx context.Context, completed *bool)([]models.Task, error){
+	
 	query := "SELECT id,title,description,completed, created_at FROM tasks"
-	rows, err := s.db.QueryContext(ctx, query)
+	conditions := []string{}
+	args := []any{}
+	if completed != nil{
+		conditions = append(conditions,fmt.Sprintf("completed = $%d", len(args)+1))
+		args = append(args, *completed)
+	}
+	if len(conditions)  > 0{
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	rows, err := s.db.QueryContext(ctx, query,args...)
 	if err != nil{
 		return nil,err
 	}
@@ -72,12 +86,41 @@ func (s *PostgresTaskStore)GetByID(ctx context.Context, id int)(*models.Task, er
 func (s *PostgresTaskStore)Update(ctx context.Context, id int, input models.UpdateTaskInput)(*models.Task, error){
 	var tasks models.Task
 	query := "UPDATE tasks SET title = $1, description = $2, completed = $3 WHERE id = $4 RETURNING id,title,description,completed,created_at"
-	err := s.db.QueryRowContext(ctx,query,input.Title,input.Description,input.Completed, id).Scan(&tasks.ID, tasks.Title,&tasks.Description,&tasks.Completed,&tasks.CreatedAt)
+	err := s.db.QueryRowContext(ctx,query,input.Title,input.Description,input.Completed, id).Scan(&tasks.ID, &tasks.Title,&tasks.Description,&tasks.Completed,&tasks.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows){
-		return nil, err
+		return nil, ErrTaskNotFound
 	}
 	if err != nil{
 		return nil,err
 	}
 	return &tasks, nil
+}
+
+func (s *PostgresTaskStore)Delete(ctx context.Context,id int)(error){
+	query := "DELETE FROM tasks WHERE id = $1"
+	result,err := s.db.ExecContext(ctx,query,id)
+	if err != nil{
+		return err
+	}
+	n,err2 := result.RowsAffected()
+	if err2 != nil{
+		return err2
+	}
+	if n == 0 {
+		return ErrTaskNotFound
+	}
+	return nil
+}
+
+func (s *PostgresTaskStore)SetCompleted(ctx context.Context, id int,completed bool)(*models.Task, error){
+	var tasks models.Task
+	query := "UPDATE tasks SET completed = $1 WHERE id = $2 RETURNING id,title,description,completed,created_at"
+	err := s.db.QueryRowContext(ctx,query,completed,id).Scan(&tasks.ID,&tasks.Title,&tasks.Description,&tasks.Completed,&tasks.CreatedAt)
+	if errors.Is(err,sql.ErrNoRows){
+		return nil,ErrTaskNotFound
+	}
+	if err !=nil {
+		return nil,err
+	}
+	return &tasks,nil
 }

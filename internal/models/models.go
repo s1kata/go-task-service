@@ -18,3 +18,7 @@ type UpdateTaskInput struct{
 		Description string `json:"description"`
 		Completed bool `json:"completed"`
 	}
+type CompletedTasks struct{
+	Title string `json:"title"`
+	Description string `json:"description"`
+}

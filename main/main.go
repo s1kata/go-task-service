@@ -27,9 +27,11 @@ func main() {
 	mux.HandleFunc("GET /tasks/{id}",h.TaskByID)
 	mux.HandleFunc("POST /tasks",h.TaskCreate)
 	mux.HandleFunc("PATCH /tasks/{id}",h.Update)
+	mux.HandleFunc("DELETE /tasks/{id}",h.TaskDelete)
 	mux.HandleFunc("/ping",handler.HandlePing)
 	mux.HandleFunc("/hello",handler.HandleHello)
 	mux.HandleFunc("/", handler.HandleNotFound)
+	
 	
 	fmt.Println("Севрвер запущен на порту:8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil{
