@@ -3,7 +3,7 @@ on:
   push:
   pull_request:
 jobs:
-    lin-test:
+    lint-test:
       runs-on: ubuntu-latest
       steps:
       - name: CheckOut
@@ -14,4 +14,9 @@ jobs:
           go-version-file: go.mod
       - name: Build
         run: go build ./...
-    
+      - name: Test
+        run: go test ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Format-Check
+        run: test -z "$(gofmt -l .)"
